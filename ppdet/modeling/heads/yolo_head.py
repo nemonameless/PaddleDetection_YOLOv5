@@ -151,7 +151,7 @@ class YOLOv3Head(nn.Layer):
 
 @register
 class YOLOXHead(nn.Layer):
-    __shared__ = ['num_classes', 'width_mult', 'act']
+    __shared__ = ['num_classes', 'width_mult', 'act', 'trt', 'exclude_nms']
     __inject__ = ['assigner', 'nms']
 
     def __init__(self,
@@ -165,10 +165,14 @@ class YOLOXHead(nn.Layer):
                  act='silu',
                  assigner=SimOTAAssigner(use_vfl=False),
                  nms='MultiClassNMS',
-                 loss_weight={'cls': 1.0,
-                              'obj': 1.0,
-                              'iou': 5.0,
-                              'l1': 1.0}):
+                 loss_weight={
+                     'cls': 1.0,
+                     'obj': 1.0,
+                     'iou': 5.0,
+                     'l1': 1.0,
+                 },
+                 trt=False,
+                 exclude_nms=False):
         super(YOLOXHead, self).__init__()
         self._dtype = paddle.framework.get_default_dtype()
         self.num_classes = num_classes
@@ -179,6 +183,9 @@ class YOLOXHead(nn.Layer):
         self.l1_epoch = l1_epoch
         self.assigner = assigner
         self.nms = nms
+        if isinstance(self.nms, MultiClassNMS) and trt:
+            self.nms.trt = trt
+        self.exclude_nms = exclude_nms
         self.loss_weight = loss_weight
         self.iou_loss = IouLoss(loss_weight=1.0)  # default loss_weight 2.5
 
@@ -402,7 +409,13 @@ class YOLOXHead(nn.Layer):
         scale_factor = scale_factor.flip(-1).tile([1, 2]).unsqueeze(1)
         pred_bboxes /= scale_factor
         bbox_pred, bbox_num, _ = self.nms(pred_bboxes, pred_scores)
-        return bbox_pred, bbox_num
+
+        if self.exclude_nms:
+            # `exclude_nms=True` just use in benchmark
+            return pred_bboxes.sum(), pred_scores.sum()
+        else:
+            bbox_pred, bbox_num, _ = self.nms(pred_bboxes, pred_scores)
+            return bbox_pred, bbox_num
 
 
 @register
@@ -511,6 +524,25 @@ class YOLOv5Head(nn.Layer):
     def from_config(cls, cfg, input_shape):
         return {'in_channels': [i.channels for i in input_shape], }
 
+    def make_grid(self, nx, ny, anchor):
+        yv, xv = paddle.meshgrid([paddle.arange(ny), paddle.arange(nx)])
+        grid = paddle.stack(
+            (xv, yv), axis=2).expand([1, self.num_anchor, ny, nx, 2])
+        anchor_grid = anchor.reshape([1, self.num_anchor, 1, 1, 2]).expand(
+            (1, self.num_anchor, ny, nx, 2))
+        return grid, anchor_grid
+
+    def postprocessing_by_level(self, head_out, stride, anchor, ny, nx):
+        grid, anchor_grid = self.make_grid(nx, ny, anchor)
+        out = F.sigmoid(head_out)
+        xy = (out[..., 0:2] * 2. - 0.5 + grid) * stride
+        wh = (out[..., 2:4] * 2)**2 * anchor_grid
+        lt_xy = (xy - wh / 2.)
+        rb_xy = (xy + wh / 2.)
+        bboxes = paddle.concat((lt_xy, rb_xy), axis=-1)
+        scores = out[..., 5:] * out[..., 4].unsqueeze(-1)
+        return bboxes, scores
+
     def post_process(self, head_outs, img_shape, scale_factor):
         bbox_list, score_list = [], []
         for i, head_out in enumerate(head_outs):
@@ -539,22 +571,3 @@ class YOLOv5Head(nn.Layer):
         else:
             bbox_pred, bbox_num, _ = self.nms(pred_bboxes, pred_scores)
             return bbox_pred, bbox_num
-
-    def postprocessing_by_level(self, head_out, stride, anchor, ny, nx):
-        grid, anchor_grid = self.make_grid(nx, ny, anchor)
-        out = F.sigmoid(head_out)
-        xy = (out[..., 0:2] * 2. - 0.5 + grid) * stride
-        wh = (out[..., 2:4] * 2)**2 * anchor_grid
-        lt_xy = (xy - wh / 2.)
-        rb_xy = (xy + wh / 2.)
-        bboxes = paddle.concat((lt_xy, rb_xy), axis=-1)
-        scores = out[..., 5:] * out[..., 4].unsqueeze(-1)
-        return bboxes, scores
-
-    def make_grid(self, nx, ny, anchor):
-        yv, xv = paddle.meshgrid([paddle.arange(ny), paddle.arange(nx)])
-        grid = paddle.stack(
-            (xv, yv), axis=2).expand([1, self.num_anchor, ny, nx, 2])
-        anchor_grid = anchor.reshape([1, self.num_anchor, 1, 1, 2]).expand(
-            (1, self.num_anchor, ny, nx, 2))
-        return grid, anchor_grid
