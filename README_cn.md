@@ -7,14 +7,14 @@
 * 【2022/05/15】新增[YOLOv5](configs/yolov5)目标检测模型，支持n/s/m/l/x版本。
 
 
-## [ModelZoo](configs/yolov5/README.md) on COCO
+## [ModelZoo](configs/yolov5) on COCO
 
 | 网络模型     | 输入尺寸|  mAP     |   模型推理耗时(ms)  |    下载链接       | 配置文件 |
 | :---------- | :---- | :------:  | :-----------------:     |:---------------: | :-----: |
 | yolov5-s     |  640  |  37.0    |  3.2    |[model](https://paddledet.bj.bcebos.com/models/yolov5_s_300e_coco.pdparams) | [config](configs/yolov5/yolox_s_300e_coco.yml) |
 
 **注意:**
- - 具体精度和速度细节请查看[yolov5](configs/yolov5/README.md)
+ - 具体精度和速度细节请查看[yolov5](configs/yolov5)
 
 
 ## TODO
