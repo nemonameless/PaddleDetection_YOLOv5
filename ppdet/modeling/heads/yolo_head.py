@@ -55,7 +55,6 @@ class YOLOv3Head(nn.Layer):
                  data_format='NCHW'):
         """
         Head for YOLOv3 network
-
         Args:
             num_classes (int): number of foreground classes
             anchors (list): anchors
@@ -408,8 +407,6 @@ class YOLOXHead(nn.Layer):
         # scale bbox to origin image
         scale_factor = scale_factor.flip(-1).tile([1, 2]).unsqueeze(1)
         pred_bboxes /= scale_factor
-        bbox_pred, bbox_num, _ = self.nms(pred_bboxes, pred_scores)
-
         if self.exclude_nms:
             # `exclude_nms=True` just use in benchmark
             return pred_bboxes.sum(), pred_scores.sum()
