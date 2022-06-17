@@ -522,7 +522,12 @@ class YOLOv5Head(nn.Layer):
         return {'in_channels': [i.channels for i in input_shape], }
 
     def make_grid(self, nx, ny, anchor):
-        yv, xv = paddle.meshgrid([paddle.arange(ny), paddle.arange(nx)])
+        yv, xv = paddle.meshgrid([
+            paddle.arange(
+                ny, dtype='float32'), paddle.arange(
+                    nx, dtype='float32')
+        ])
+
         grid = paddle.stack(
             (xv, yv), axis=2).expand([1, self.num_anchor, ny, nx, 2])
         anchor_grid = anchor.reshape([1, self.num_anchor, 1, 1, 2]).expand(
