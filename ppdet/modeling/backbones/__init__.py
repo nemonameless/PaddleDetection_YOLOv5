@@ -32,6 +32,8 @@ from . import esnet
 from . import cspresnet
 from . import csp_darknet
 from . import convnext
+from . import vision_transformer
+from . import mobileone
 
 from .vgg import *
 from .resnet import *
@@ -53,3 +55,6 @@ from .esnet import *
 from .cspresnet import *
 from .csp_darknet import *
 from .convnext import *
+from .vision_transformer import *
+from .vision_transformer import *
+from .mobileone import *
