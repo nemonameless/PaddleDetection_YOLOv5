@@ -144,10 +144,10 @@ python tools/export_model.py -c configs/yolov5/yolov5_s_300e_coco.yml -o weights
 python deploy/python/infer.py --model_dir=output_inference/yolov5_s_300e_coco --image_file=demo/000000014439_640x640.jpg --device=gpu --run_benchmark=True
 
 # tensorRT-FP32测速
-python deploy/python/infer.py --model_dir=output_inference/yolov5_s_300e_coco --image_file=demo/000000014439_640x640.jpg --device=gpu --run_benchmark=True --trt_max_shape=640 --trt_min_shape=640 --trt_opt_shape=640 --run_mode=trt_fp32
+python deploy/python/infer.py --model_dir=output_inference/yolov5_s_300e_coco --image_file=demo/000000014439_640x640.jpg --device=gpu --run_benchmark=True --run_mode=trt_fp32
 
 # tensorRT-FP16测速
-python deploy/python/infer.py --model_dir=output_inference/yolov5_s_300e_coco --image_file=demo/000000014439_640x640.jpg --device=gpu --run_benchmark=True --trt_max_shape=640 --trt_min_shape=640 --trt_opt_shape=640 --run_mode=trt_fp16
+python deploy/python/infer.py --model_dir=output_inference/yolov5_s_300e_coco --image_file=demo/000000014439_640x640.jpg --device=gpu --run_benchmark=True --run_mode=trt_fp16
 ```
 **注意:**
 - 导出模型时指定`-o exclude_nms=True`仅作为测速时用，这样导出的模型其推理部署预测的结果不是最终检出框的结果。
