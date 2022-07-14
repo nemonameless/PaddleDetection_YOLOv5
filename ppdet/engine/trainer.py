@@ -15,7 +15,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+from IPython import embed
 import os
 import sys
 import copy
@@ -114,6 +114,13 @@ class Trainer(object):
                 if isinstance(m, nn.BatchNorm2D):
                     m._epsilon = 1e-3  # for amp(fp16)
                     m._momentum = 0.97  # 0.03 in pytorch
+
+        # print(self.model)
+        params = sum([
+            p.numel() for n, p in self.model.named_parameters()
+            if all([x not in n for x in ['_mean', '_variance']])
+        ])  # exclude BatchNorm running status
+        print('Params: {} M.'.format((params[0] / 1e6).numpy()))
 
         #normalize params for deploy
         if 'slim' in cfg and cfg['slim_type'] == 'OFA':

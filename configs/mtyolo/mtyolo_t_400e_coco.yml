@@ -1,0 +1,13 @@
+_BASE_: [
+  '../datasets/coco_detection.yml',
+  '../runtime.yml',
+  '_base_/optimizer_400e.yml',
+  '_base_/mtyolo_efficientrep.yml',
+  '_base_/mtyolo_reader.yml',
+]
+depth_mult: 0.25
+width_mult: 0.50
+
+log_iter: 100
+snapshot_epoch: 10
+weights: output/mtyolo_t_400e_coco/model_final
