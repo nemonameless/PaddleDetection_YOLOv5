@@ -402,8 +402,6 @@ class Trainer(object):
             scaler = paddle.amp.GradScaler(
                 enable=self.cfg.use_gpu or self.cfg.use_npu,
                 init_loss_scaling=self.cfg.get('init_loss_scaling', 1024))
-            # model = paddle.amp.decorate(models=model, level=self.amp_level)
-            # only for tipc
         else:
             scaler = paddle.amp.GradScaler(enable=False)
 
@@ -472,7 +470,7 @@ class Trainer(object):
                             model, paddle.
                             DataParallel) and use_fused_allreduce_gradients:
                         with model.no_sync():
-                            with amp.auto_cast(
+                            with paddle.amp.auto_cast(
                                     enable=self.cfg.use_gpus,
                                     level=self.amp_level):
                                 # model forward
@@ -484,7 +482,7 @@ class Trainer(object):
                         fused_allreduce_gradients(
                             list(model.parameters()), None)
                     else:
-                        with amp.auto_cast(
+                        with paddle.amp.auto_cast(
                                 enable=self.cfg.use_gpu, level=self.amp_level):
                             # model forward
                             outputs = model(data)
