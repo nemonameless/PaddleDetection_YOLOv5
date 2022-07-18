@@ -18,6 +18,7 @@ from __future__ import print_function
 
 from ppdet.core.workspace import register, create
 from .meta_arch import BaseArch
+from IPython import embed
 
 __all__ = ['YOLOv5']
 
@@ -75,7 +76,11 @@ class YOLOv5(BaseArch):
 
     def _forward(self):
         body_feats = self.backbone(self.inputs)
+        # for i, f in enumerate(body_feats):
+        #     print(i, f.shape, f.sum())
         neck_feats = self.neck(body_feats, self.for_mot)
+        # for i, f in enumerate(neck_feats):
+        #     print(i, f.shape, f.sum())
 
         if self.training:
             yolo_losses = self.yolo_head(neck_feats, self.inputs)
@@ -85,6 +90,7 @@ class YOLOv5(BaseArch):
             bbox, bbox_num = self.yolo_head.post_process(
                 yolo_head_outs, self.inputs['im_shape'],
                 self.inputs['scale_factor'])
+            #print(bbox)
             return {'bbox': bbox, 'bbox_num': bbox_num}
 
     def get_loss(self):
