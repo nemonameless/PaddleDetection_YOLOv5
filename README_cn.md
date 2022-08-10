@@ -1,3 +1,10 @@
+最新更新请前往[PaddleDetection_YOLOSeries](https://github.com/nemonameless/PaddleDetection_YOLOSeries)使用。
+  - 全面覆盖的YOLO家族经典与最新模型: 包括YOLOv3，百度飞桨自研的实时高精度目标检测检测模型PP-YOLOE，以及前沿检测算法YOLOv4、YOLOv5、YOLOX，MT-YOLOv6及YOLOv7
+  - 更强的模型性能：基于各家前沿YOLO算法进行创新并升级，缩短训练周期5~8倍，精度普遍提升1%~5% mAP；使用模型压缩策略实现精度无损的同时速度提升30%以上
+  - 完备的端到端开发支持：支持从模型训练、评估、预测到模型量化压缩，部署多种硬件的端到端开发全流程。同时支持不同模型算法灵活切换，一键实现算法二次开发
+
+=================================================================
+
 ## 简介
 
 此repository是基于[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection)的`YOLOv5`，其upstream为PaddleDetection的[develop](https://github.com/PaddlePaddle/PaddleDetection/tree/develop)分支，在保持与PaddleDetection同步更新的同时，也更新关于YOLOv5的一些改进，并同步更新github和gitee的代码，欢迎一起使用和建设！
@@ -8,19 +15,20 @@
 
 
 ## Updates!
+* 【2022/08/09】YOLO家族全系列模型[PaddleDetection_YOLOSeries](https://github.com/nemonameless/PaddleDetection_YOLOSeries)发布，支持PP-YOLOE、YOLOv5、YOLOX，MT-YOLOv6以及YOLOv7。
 * 【2022/05/15】新增[YOLOv5](configs/yolov5)目标检测模型，支持n/s/m/l/x版本。
 
 
 ## [ModelZoo](configs/yolov5) on COCO
 
-| 网络网络        | 输入尺寸   | 图片数/GPU | 学习率策略 | 模型推理耗时(ms) |   mAP  |   AP50  |   下载链接       | 配置文件 |
-| :------------- | :------- | :-------: | :------: | :---------: | :-----: |:-----: | :-------------: | :-----: |
-| YOLOv5-n        |  640     |    16     |   300e    |     2.6    |  28.0  | 45.7 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_n_300e_coco.pdparams) | [配置文件](configs/yolov5/yolov5_n_300e_coco.yml) |
-| YOLOv5-s        |  640     |    8      |   300e    |     3.2    |  37.0  | 55.9 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_s_300e_coco.pdparams) | [配置文件](configs/yolov5/yolov5_s_300e_coco.yml) |
-| YOLOv5-m        |  640     |    8      |   300e    |     5.2    |  45.3  | 63.8 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_m_300e_coco.pdparams) | [配置文件](configs/yolov5/yolov5_m_300e_coco.yml) |
-| YOLOv5-l        |  640     |    8      |   300e    |     7.9    |  48.6  | 66.9 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_l_300e_coco.pdparams) | [配置文件](configs/yolov5/yolov5_l_300e_coco.yml) |
-| YOLOv5-x        |  640     |    8      |   300e    |     13.7    |  50.6  | 68.7 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_x_300e_coco.pdparams) | [配置文件](configs/yolov5/yolov5_x_300e_coco.yml) |
-
+| 网络网络        | 输入尺寸   | 图片数/GPU | 学习率策略 | 模型推理耗时(ms) | mAP<sup>val<br>0.5:0.95 | mAP<sup>val<br>0.5 | Params(M) | FLOPs(G) |    下载链接       | 配置文件 |
+| :------------- | :------- | :-------: | :------: | :------------: | :---------------------: | :----------------: |:---------: | :------: |:---------------: |:-----: |
+| YOLOv5-n        |  640     |    16     |   300e    |     2.6    |  28.0  | 45.7 |  1.87  | 4.52 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_n_300e_coco.pdparams) | [配置文件](./yolov5_n_300e_coco.yml) |
+| YOLOv5-s        |  640     |    8      |   300e    |     3.2    |  37.0  | 55.9 |  7.24  | 16.54 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_s_300e_coco.pdparams) | [配置文件](./yolov5_s_300e_coco.yml) |
+| YOLOv5-m        |  640     |    8      |   300e    |     5.2    |  45.3  | 63.8 |  21.19  | 49.08 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_m_300e_coco.pdparams) | [配置文件](./yolov5_m_300e_coco.yml) |
+| YOLOv5-l        |  640     |    8      |   300e    |     7.9    |  48.6  | 66.9 |  46.56  | 109.32 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_l_300e_coco.pdparams) | [配置文件](./yolov5_l_300e_coco.yml) |
+| YOLOv5-x        |  640     |    8      |   300e    |     13.7    |  **50.6**  | **68.7** |  86.75  | 205.92 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_x_300e_coco.pdparams) | [配置文件](./yolov5_x_300e_coco.yml) |
+| YOLOv5-s ConvNeXt|  640     |    8      |   36e     |     -      |  42.4  |  65.3  |  34.54 |  17.96 | [下载链接](https://paddledet.bj.bcebos.com/models/yolov5_convnext_s_36e_coco.pdparams) | [配置文件](./yolov5_convnext_s_36e_coco.yml) |
 **注意:**
  - 具体精度和速度细节请查看[yolov5](configs/yolov5)
 
@@ -28,7 +36,7 @@
 ## TODO
   - [x] YOLOv5-P6、YOLOv5-P2
   - [x] 换主干网络：CSP-ResNet
-  - [ ] [PaddleDetection_YOLOv7](https://github.com/nemonameless/PaddleDetection_YOLOv7)(Doing)
+  - [x] YOLOv7,MT-YOLOv6以及YOLO模型集合--[PaddleDetection_YOLOSeries](https://github.com/nemonameless/PaddleDetection_YOLOSeries)
   - [ ] Transformer modules
   - [ ] 更多Data Augmentation、Attention Module、Loss
   - [ ] 精简代码只保留YOLO系列模型(YOLOv3、PP-YOLO、PP-YOLOv2、PP-YOLOE、YOLOX、YOLOv5)

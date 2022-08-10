@@ -1011,9 +1011,6 @@ class YOLOCSPPAN(nn.Layer):
         Conv = DWConv if depthwise else BaseConv
 
         self.data_format = data_format
-        act = get_act_fn(
-            act, trt=trt) if act is None or isinstance(act,
-                                                       (str, dict)) else act
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
 
         # top-down fpn

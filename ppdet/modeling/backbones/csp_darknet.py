@@ -26,6 +26,18 @@ __all__ = [
 ]
 
 
+def get_activation(name="silu"):
+    if name == "silu":
+        module = nn.Silu()
+    elif name == "relu":
+        module = nn.ReLU()
+    elif name in ["LeakyReLU", 'leakyrelu', 'lrelu']:
+        module = nn.LeakyReLU(0.1)
+    else:
+        raise AttributeError("Unsupported act type: {}".format(name))
+    return module
+
+
 class BaseConv(nn.Layer):
     def __init__(self,
                  in_channels,
@@ -46,18 +58,22 @@ class BaseConv(nn.Layer):
             bias_attr=bias)
         self.bn = nn.BatchNorm2D(
             out_channels,
+            epsilon=1e-3,  # for amp(fp16)
+            momentum=0.97,
             weight_attr=ParamAttr(regularizer=L2Decay(0.0)),
             bias_attr=ParamAttr(regularizer=L2Decay(0.0)))
-
+        self.act = get_activation(act)
         self._init_weights()
 
     def _init_weights(self):
         conv_init_(self.conv)
 
     def forward(self, x):
-        # use 'x * F.sigmoid(x)' replace 'silu'
         x = self.bn(self.conv(x))
-        y = x * F.sigmoid(x)
+        if self.training:
+            y = self.act(x)
+        else:
+            y = x * F.sigmoid(x)  # silu
         return y
 
 
