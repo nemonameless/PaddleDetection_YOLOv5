@@ -1,4 +1,4 @@
-最新更新请前往[PaddleDetection_YOLOSeries](https://github.com/nemonameless/PaddleDetection_YOLOSeries)使用。
+最新更新请前往[PaddleYOLO](https://github.com/PaddlePaddle/PaddleYOLO)使用。
   - 全面覆盖的YOLO家族经典与最新模型: 包括YOLOv3，百度飞桨自研的实时高精度目标检测检测模型PP-YOLOE，以及前沿检测算法YOLOv4、YOLOv5、YOLOX，MT-YOLOv6及YOLOv7
   - 更强的模型性能：基于各家前沿YOLO算法进行创新并升级，缩短训练周期5~8倍，精度普遍提升1%~5% mAP；使用模型压缩策略实现精度无损的同时速度提升30%以上
   - 完备的端到端开发支持：支持从模型训练、评估、预测到模型量化压缩，部署多种硬件的端到端开发全流程。同时支持不同模型算法灵活切换，一键实现算法二次开发
