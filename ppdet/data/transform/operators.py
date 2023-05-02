@@ -3740,6 +3740,88 @@ class PadResize(BaseOperator):
 
 @register_op
 class DecodeNormResize(BaseOperator):
+    def __init__(self, target_size, to_rgb=False, mosaic=True):
+        super(DecodeNormResize, self).__init__()
+        if not isinstance(target_size, (Integral, Sequence)):
+            raise TypeError(
+                "Type of target_size is invalid. Must be Integer or List or Tuple, now is {}".
+                format(type(target_size)))
+        if isinstance(target_size, Integral):
+            target_size = [target_size, target_size]
+        self.target_size = target_size
+        self.to_rgb = to_rgb
+        self.mosaic = mosaic
+
+    def bbox_norm(self, sample):
+        assert 'gt_bbox' in sample
+        bbox = sample['gt_bbox']
+        height, width = sample['image'].shape[:2]
+        y = bbox.copy()
+        y[:, 0] = ((bbox[:, 0] + bbox[:, 2]) / 2) / width  # x center
+        y[:, 1] = ((bbox[:, 1] + bbox[:, 3]) / 2) / height  # y center
+        y[:, 2] = (bbox[:, 2] - bbox[:, 0]) / width  # width
+        y[:, 3] = (bbox[:, 3] - bbox[:, 1]) / height  # height
+        sample['gt_bbox'] = y
+        return sample
+
+    def load_resized_img(self, sample, target_size):
+        if 'image' not in sample:
+            img_file = sample['im_file']
+            sample['image'] = cv2.imread(img_file)  # BGR
+            sample.pop('im_file')
+        im = sample['image']
+
+        sample = self.bbox_norm(sample)
+
+        if 'keep_ori_im' in sample and sample['keep_ori_im']:
+            sample['ori_image'] = im
+
+        if 'h' not in sample:
+            sample['h'] = im.shape[0]
+        elif sample['h'] != im.shape[0]:
+            logger.warning(
+                "The actual image height: {} is not equal to the "
+                "height: {} in annotation, and update sample['h'] by actual "
+                "image height.".format(im.shape[0], sample['h']))
+            sample['h'] = im.shape[0]
+        if 'w' not in sample:
+            sample['w'] = im.shape[1]
+        elif sample['w'] != im.shape[1]:
+            logger.warning(
+                "The actual image width: {} is not equal to the "
+                "width: {} in annotation, and update sample['w'] by actual "
+                "image width.".format(im.shape[1], sample['w']))
+            sample['w'] = im.shape[1]
+
+        sample['im_shape'] = np.array(
+            im.shape[:2], dtype=np.float32)  # original shape
+
+        # get resized img
+        r = min(target_size[0] / im.shape[0], target_size[1] / im.shape[1])
+        if r != 1:  # if sizes are not equal
+            resized_img = cv2.resize(
+                im, (int(im.shape[1] * r), int(im.shape[0] * r)),
+                interpolation=cv2.INTER_LINEAR if (self.mosaic or r > 1) else
+                cv2.INTER_AREA)  ########## .astype(np.uint8)
+        else:
+            resized_img = im
+
+        h, w = resized_img.shape[:2]
+        if self.to_rgb:
+            resized_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2RGB)
+
+        sample['image'] = resized_img
+        sample['scale_factor'] = np.array(
+            [h / im.shape[0], w / im.shape[1]], dtype=np.float32)
+        return sample
+
+    def apply(self, sample, context=None):
+        sample = self.load_resized_img(sample, self.target_size)
+        return sample
+
+
+@register_op
+class DecodeNormResizeCache(BaseOperator):
     def __init__(self, cache_root, target_size, to_rgb=False, mosaic=True):
         super(DecodeNormResize, self).__init__()
         if not isinstance(target_size, (Integral, Sequence)):
@@ -3774,13 +3856,15 @@ class DecodeNormResize(BaseOperator):
                 self.cache_path(self.cache_root, sample['im_file'])):
             path = self.cache_path(self.cache_root, sample['im_file'])
             im = self.load(path)
+            im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+            sample['image'] = im
         else:
             if 'image' not in sample:
                 img_file = sample['im_file']
                 sample['image'] = cv2.imread(img_file)  # BGR
                 sample.pop('im_file')
+            im = sample['image']
 
-        im = sample['image']
         sample = self.bbox_norm(sample)
 
         if 'keep_ori_im' in sample and sample['keep_ori_im']:
