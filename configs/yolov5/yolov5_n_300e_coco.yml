@@ -15,6 +15,3 @@ weights: output/yolov5_n_300e_coco/model_final
 
 TrainReader:
   batch_size: 16
-
-LearningRate:
-  base_lr: 0.02

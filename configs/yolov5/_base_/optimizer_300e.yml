@@ -15,5 +15,6 @@ OptimizerBuilder:
     momentum: 0.937
     use_nesterov: True
   regularizer:
-    factor: 0.0005
+    factor: 0.001 # bs=128
+    # factor: 0.0005 # bs=64
     type: L2

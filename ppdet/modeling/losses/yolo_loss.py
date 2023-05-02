@@ -257,7 +257,10 @@ class YOLOv5Loss(nn.Layer):
 
     def build_targets(self, outputs, targets, anchors):
         anchors = anchors.numpy()
-        gt_nums = [len(bbox) for bbox in targets['gt_bbox']]
+        # targets['gt_class'] [bs, max_gt_nums, 1]
+        # targets['gt_bbox'] [bs, max_gt_nums, 4]
+        # targets['pad_gt_mask'] [bs, max_gt_nums, 1]
+        gt_nums = targets['pad_gt_mask'].sum(1).squeeze(-1).numpy()
         nt = int(sum(gt_nums))
         na = anchors.shape[1]  # not len(anchors)
         tcls, tbox, indices, anch = [], [], [], []
@@ -271,11 +274,11 @@ class YOLOv5Loss(nn.Layer):
         batch_size = outputs[0].shape[0]
         gt_labels = []
         for idx in range(batch_size):
-            gt_num = gt_nums[idx]
+            gt_num = int(gt_nums[idx])
             if gt_num == 0:
                 continue
-            gt_bbox = targets['gt_bbox'][idx][:gt_num]
-            gt_class = targets['gt_class'][idx][:gt_num] * 1.0
+            gt_bbox = targets['gt_bbox'][idx][:gt_num].numpy()
+            gt_class = targets['gt_class'][idx][:gt_num].numpy() * 1.0
             img_idx = np.repeat(np.array([[idx]]), gt_num, axis=0)
             gt_labels.append(
                 np.concatenate(
@@ -352,11 +355,9 @@ class YOLOv5Loss(nn.Layer):
         loss_box = paddle.to_tensor([0.])
         loss_cls = paddle.to_tensor([0.])
         if n:
-            ps = pi.gather_nd(
-                paddle.concat([
-                    b.reshape([-1, 1]), a.reshape([-1, 1]), gj.reshape([-1, 1]),
-                    gi.reshape([-1, 1])
-                ], 1))
+            mask = paddle.stack([b, a, gj, gi], 1)
+            ps = pi.gather_nd(mask)
+
             # Regression
             pxy = F.sigmoid(ps[:, :2]) * 2 - 0.5
             pwh = (F.sigmoid(ps[:, 2:4]) * 2)**2 * t_anchor
@@ -368,8 +369,9 @@ class YOLOv5Loss(nn.Layer):
             # Objectness
             score_iou = paddle.cast(iou.detach().clip(0), tobj.dtype)
             with paddle.no_grad():
-                tobj[b, a, gj, gi] = (1.0 - self.gr
-                                      ) + self.gr * score_iou  # iou ratio
+                x = paddle.gather_nd(tobj, mask)
+                tobj = paddle.scatter_nd_add(
+                    tobj, mask, (1.0 - self.gr) + self.gr * score_iou - x)
 
             # Classification
             t = paddle.full_like(ps[:, 5:], self.cls_neg_label)

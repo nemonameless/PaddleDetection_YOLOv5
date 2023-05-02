@@ -116,8 +116,8 @@ def run(FLAGS, cfg):
         # init parallel environment if nranks > 1
         init_parallel_env()
 
-    if FLAGS.enable_ce:
-        set_random_seed(0)
+    #if FLAGS.enable_ce:
+    set_random_seed(2023)
 
     # build trainer
     trainer = Trainer(cfg, mode='train')

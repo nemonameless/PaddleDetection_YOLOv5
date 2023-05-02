@@ -359,7 +359,8 @@ class MosaicPerspective(BaseOperator):
         sample['image'] = mosaic_img  #.astype(np.uint8)
         sample['gt_bbox'] = mosaic_gt_bboxes
         sample['gt_class'] = gt_classes
-
+        if 'is_crowd' in sample:
+            sample.pop('is_crowd')
         if 'difficult' in sample:
             sample.pop('difficult')
         return sample
@@ -3739,7 +3740,7 @@ class PadResize(BaseOperator):
 
 @register_op
 class DecodeNormResize(BaseOperator):
-    def __init__(self, target_size, to_rgb=False, mosaic=True):
+    def __init__(self, cache_root, target_size, to_rgb=False, mosaic=True):
         super(DecodeNormResize, self).__init__()
         if not isinstance(target_size, (Integral, Sequence)):
             raise TypeError(
@@ -3750,6 +3751,11 @@ class DecodeNormResize(BaseOperator):
         self.target_size = target_size
         self.to_rgb = to_rgb
         self.mosaic = mosaic
+
+        self.use_cache = False if cache_root is None else True
+        self.cache_root = cache_root
+        if cache_root is not None:
+            _make_dirs(cache_root)
 
     def bbox_norm(self, sample):
         assert 'gt_bbox' in sample
@@ -3764,10 +3770,16 @@ class DecodeNormResize(BaseOperator):
         return sample
 
     def load_resized_img(self, sample, target_size):
-        if 'image' not in sample:
-            img_file = sample['im_file']
-            sample['image'] = cv2.imread(img_file)  # BGR
-            sample.pop('im_file')
+        if self.use_cache and os.path.exists(
+                self.cache_path(self.cache_root, sample['im_file'])):
+            path = self.cache_path(self.cache_root, sample['im_file'])
+            im = self.load(path)
+        else:
+            if 'image' not in sample:
+                img_file = sample['im_file']
+                sample['image'] = cv2.imread(img_file)  # BGR
+                sample.pop('im_file')
+
         im = sample['image']
         sample = self.bbox_norm(sample)
 
@@ -3816,3 +3828,26 @@ class DecodeNormResize(BaseOperator):
     def apply(self, sample, context=None):
         sample = self.load_resized_img(sample, self.target_size)
         return sample
+
+    @staticmethod
+    def cache_path(dir_oot, im_file):
+        return os.path.join(dir_oot, os.path.basename(im_file) + '.pkl')
+
+    @staticmethod
+    def load(path):
+        with open(path, 'rb') as f:
+            im = pickle.load(f)
+        return im
+
+    @staticmethod
+    def dump(obj, path):
+        MUTEX.acquire()
+        try:
+            with open(path, 'wb') as f:
+                pickle.dump(obj, f)
+
+        except Exception as e:
+            logger.warning('dump {} occurs exception {}'.format(path, str(e)))
+
+        finally:
+            MUTEX.release()
